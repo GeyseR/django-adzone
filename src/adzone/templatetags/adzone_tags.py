@@ -99,3 +99,5 @@ def random_many_ad(context, ad_zone, ad_category=None, cnt=1):
                 impression.save()
             except:
                 pass
+
+    return ad_qs
