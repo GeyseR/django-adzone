@@ -8,12 +8,13 @@
 from datetime import datetime
 from django import template
 from adzone.models import AdBase, AdImpression
+from django.utils import six
 
 register = template.Library()
 
 
 @register.inclusion_tag('adzone/ad_tag.html', takes_context=True)
-def random_zone_ad(context, ad_zone):
+def random_zone_ad(context, ad_zone, cnt=1):
     """
     Returns a random advert for ``ad_zone``.
     The advert returned is independent of the category
@@ -28,14 +29,14 @@ def random_zone_ad(context, ad_zone):
     {% random_zone_ad 'zone_slug' %}
 
     """
-    to_return = {}
+    to_return = {'ad_zone': ad_zone, 'ad_category': None}
 
     # Retrieve a random ad for the zone
-    ad = AdBase.objects.get_random_ad(ad_zone)
+    ad = AdBase.objects.get_random_ad(ad_zone)[0]
     to_return['ad'] = ad
 
     # Record a impression for the ad
-    if context.has_key('from_ip') and ad:
+    if 'from_ip' in context and ad:
         from_ip = context.get('from_ip')
         try:
             impression = AdImpression(
@@ -47,7 +48,7 @@ def random_zone_ad(context, ad_zone):
 
 
 @register.inclusion_tag('adzone/ad_tag.html', takes_context=True)
-def random_category_ad(context, ad_zone, ad_category):
+def random_category_ad(context, ad_zone, ad_category, cnt=1):
     """
     Returns a random advert from the specified category.
 
@@ -59,11 +60,11 @@ def random_category_ad(context, ad_zone, ad_category):
     to_return = {}
 
     # Retrieve a random ad for the category and zone
-    ad = AdBase.objects.get_random_ad(ad_zone, ad_category)
+    ad = AdBase.objects.get_random_ad(ad_zone, ad_category)[0]
     to_return['ad'] = ad
 
     # Record a impression for the ad
-    if context.has_key('from_ip') and ad:
+    if 'from_ip' in context and ad:
         from_ip = context.get('from_ip')
         try:
             impression = AdImpression(
@@ -72,3 +73,29 @@ def random_category_ad(context, ad_zone, ad_category):
         except:
             pass
     return to_return
+
+
+@register.assignment_tag(takes_context=True)
+def random_many_ad(context, ad_zone, ad_category=None, cnt=1):
+    """
+    Returns a queryset with random adverts for specified zone and
+    from the specified category if passed.
+    Write AdImpression for all returned adverts
+
+    Usage:
+    {% load adzone_tags %}
+    {% random_many_ad ad_zone='zone_slug' ad_category='my_category_slug' cnt=5 as ad_qs %}
+
+    """
+
+    ad_qs = AdBase.objects.get_random_ad(ad_zone, ad_category, cnt)
+
+    from_ip = context.get('from_ip')
+    if from_ip:
+        for ad in ad_qs:
+            try:
+                impression = AdImpression(
+                    ad=ad, impression_date=datetime.now(), source_ip=from_ip)
+                impression.save()
+            except:
+                pass

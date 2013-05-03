@@ -141,13 +141,18 @@ class AdManagerTestCase(TestCase):
 
     def test_get_random_ad(self):
         advert = AdBase.objects.get_random_ad('sidebar')
-        self.assertIn(advert.id, [1, 2])
+        self.assertIn(advert[0].id, [1, 2])
 
     def test_get_random_ad_by_category(self):
         advert = AdBase.objects.get_random_ad('sidebar',
                                               ad_category='category-2')
-        self.assertIn(advert.id, [2])
+        self.assertIn(advert[0].id, [2])
 
+    def test_get_random_ad_by_category(self):
+        advert = AdBase.objects.get_random_ad('sidebar',
+                                              ad_category='category-2',
+                                              cnt=2)
+        self.assertEqual(advert.count(), 2)
 
 class AdImpressionTestCase(TestCase):
 
