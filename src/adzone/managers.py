@@ -14,11 +14,12 @@ class AdManager(models.Manager):
             if ad_category:
                 ad = self.get_query_set().filter(
                     category__slug=ad_category,
-                    zone__slug=ad_zone
+                    zone__slug=ad_zone,
+                    enabled=True
                 ).order_by('?')[:cnt]
             else:
                 ad = self.get_query_set().filter(
-                    zone__slug=ad_zone).order_by('?')[:cnt]
+                    zone__slug=ad_zone, enabled=True).order_by('?')[:cnt]
         except IndexError:
             return None
         return ad
