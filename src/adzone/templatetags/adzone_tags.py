@@ -32,7 +32,10 @@ def random_zone_ad(context, ad_zone, cnt=1):
     to_return = {'ad_zone': ad_zone, 'ad_category': None}
 
     # Retrieve a random ad for the zone
-    ad = AdBase.objects.get_random_ad(ad_zone)[0]
+    try:
+        ad = AdBase.objects.get_random_ad(ad_zone)[0]
+    except IndexError:
+        ad = None
     to_return['ad'] = ad
 
     # Record a impression for the ad
@@ -60,7 +63,10 @@ def random_category_ad(context, ad_zone, ad_category, cnt=1):
     to_return = {}
 
     # Retrieve a random ad for the category and zone
-    ad = AdBase.objects.get_random_ad(ad_zone, ad_category)[0]
+    try:
+        ad = AdBase.objects.get_random_ad(ad_zone, ad_category)[0]
+    except IndexError:
+        ad = None
     to_return['ad'] = ad
 
     # Record a impression for the ad
